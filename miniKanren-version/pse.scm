@@ -124,7 +124,7 @@
     ((((_.0 _.1 _.2 _.3 _.4 _.5 _.6 _.7 . _.8) (_.9 _.10 _.11 _.12 _.13 _.14 _.15 _.16 . _.17)) _.7 _.16) (=/= ((_.7 _.0)) ((_.7 _.1)) ((_.7 _.2)) ((_.7 _.3)) ((_.7 _.4)) ((_.7 _.5)) ((_.7 _.6))) (sym _.7))))
 
 (test-check "simple-!-eo-1"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma e l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== '(intexp ()) e)
@@ -133,7 +133,7 @@
   '((((h low) (HIGH LOW)) (intexp ()) LOW)))
 
 (test-check "simple-!-eo-2"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma e l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== '(> h (intexp ())) e)
@@ -142,7 +142,7 @@
   '((((h low) (HIGH LOW)) (> h (intexp ())) HIGH)))
 
 (test-check "simple-!-eo-3"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma e l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== '(- h low) e)
@@ -215,7 +215,7 @@
      LOW)))
 
 (test-check "simple-!-o-1"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== `(output ,LOW (intexp (1))) c)
@@ -224,25 +224,23 @@
   '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
 
 (test-check "simple-!-o-2"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== `(while (> h (intexp ())) (assign h (- h low))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW)) HIGH (while (> h (intexp ())) (assign h (- h low))) LOW)))
-
-(test-check "example-1"
-  (run 1 (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (while (> h (intexp ())) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
-      (!-o gamma pc c l)
-      (== `(,gamma ,pc ,c ,l) q)))
-  '())
+  '((((h low) (HIGH LOW))
+     HIGH
+     (while (> h (intexp ())) (assign h (- h low)))
+     LOW)
+    (((h low) (HIGH LOW))
+     LOW
+     (while (> h (intexp ())) (assign h (- h low)))
+     LOW)))
 
 (test-check "example-2"
-  (run 1 (q)
+  (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
       (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
@@ -255,3 +253,13 @@
           (while (> h (intexp ())) (assign h (- h low))))
         (output LOW (intexp (1))))
    LOW)))
+
+;;; Uh oh!  This run succeeds instead of failing.  WAT
+(test-check "example-1"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(seq (while (> h (intexp ())) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '())

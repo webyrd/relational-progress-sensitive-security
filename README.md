@@ -12,3 +12,7 @@ TODO:
 * add more test programs
 * implement semantics
 * implement multi-level lattices
+
+QUESTIONS/ISSUES:
+
+* Would this code benefit from the use of LVars (lattice variables)?  I think it might.
