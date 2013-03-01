@@ -223,6 +223,42 @@
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
 
+(test-check "example-2"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '((((h low) (HIGH LOW))
+   LOW
+   (seq (cast
+          p-tag
+          (while (> h (intexp ())) (assign h (- h low))))
+        (output LOW (intexp (1))))
+   LOW)))
+
+(test-check "simple-!-o-4"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(assign low h) c)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '())
+
+(test-check "simple-!-o-3"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(assign h (- h low)) c)
+      (== HIGH pc)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '((((h low) (HIGH LOW)) HIGH (assign h (- h low)) LOW)))
+
+;;; Uh oh!  According to the paper, the termination level of this
+;;; while loop should be HIGH.
 (test-check "simple-!-o-2"
   (run* (q)
     (fresh (gamma pc c l)
@@ -238,21 +274,6 @@
      LOW
      (while (> h (intexp ())) (assign h (- h low)))
      LOW)))
-
-(test-check "example-2"
-  (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
-      (!-o gamma pc c l)
-      (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW))
-   LOW
-   (seq (cast
-          p-tag
-          (while (> h (intexp ())) (assign h (- h low))))
-        (output LOW (intexp (1))))
-   LOW)))
 
 ;;; Uh oh!  This run succeeds instead of failing.  WAT
 (test-check "example-1"
