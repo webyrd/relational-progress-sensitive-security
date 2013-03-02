@@ -83,7 +83,9 @@
          (!-o gamma pcl1 c2 l2))]
       [(fresh (e c l l^ pcl pcll^)
          (== `(while ,e ,c) comm)
-         (== l^ term-level)
+         (== pcll^ term-level) ; the 'while' rule in Figure 3 of the
+                               ; published paper contains a typo: the
+                               ; term level should be pcll^, not l^.
          (lattice-joino pc l pcl)
          (lattice-joino pcl l^ pcll^)
          (!-eo gamma e l)
@@ -95,6 +97,10 @@
          (!-eo gamma e l)
          (!-o gamma pcl c1 l1)
          (!-o gamma pcl c2 l2))])))
+
+(define typeo
+  (lambda (gamma comm term-level)
+    (!-o gamma LOW comm term-level)))
 
 (test-check "lookupo-1"
   (run 5 (q)
@@ -223,21 +229,6 @@
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
 
-(test-check "example-2"
-  (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
-      (!-o gamma pc c l)
-      (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW))
-   LOW
-   (seq (cast
-          p-tag
-          (while (> h (intexp ())) (assign h (- h low))))
-        (output LOW (intexp (1))))
-   LOW)))
-
 (test-check "simple-!-o-4"
   (run* (q)
     (fresh (gamma pc c l)
@@ -277,8 +268,6 @@
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
 
-;;; Uh oh!  According to the paper, the termination level of this
-;;; while loop should be HIGH.
 (test-check "simple-!-o-2"
   (run* (q)
     (fresh (gamma pc c l)
@@ -289,14 +278,14 @@
   '((((h low) (HIGH LOW))
      HIGH
      (while (> h (intexp ())) (assign h (- h low)))
-     LOW)
+     HIGH)
     (((h low) (HIGH LOW))
      LOW
      (while (> h (intexp ())) (assign h (- h low)))
-     LOW)))
+     HIGH)))
 
-;;; Uh oh!  This run succeeds instead of failing.  WAT
-(test-check "example-1"
+(test-check "almost-example-1"
+;;; uses !-o instead of typeo
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
@@ -304,3 +293,42 @@
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
   '())
+
+(test-check "almost-example-2"
+;;; uses !-o instead of typeo  
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '((((h low) (HIGH LOW))
+     LOW
+     (seq (cast
+           p-tag
+           (while (> h (intexp ())) (assign h (- h low))))
+          (output LOW (intexp (1))))
+     LOW)))
+
+(test-check "example-1"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(seq (while (> h (intexp ())) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '())
+
+(test-check "example-2"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '((((h low) (HIGH LOW))
+     (seq (cast
+           p-tag
+           (while (> h (intexp ())) (assign h (- h low))))
+          (output LOW (intexp (1))))
+     LOW)))
