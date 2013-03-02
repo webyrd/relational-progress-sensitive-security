@@ -142,7 +142,13 @@
            (== `((assign ,x ,e) ,m ,o) in-state)
            (== `(stop ,m^ ,o) out-state)
            (ext-envo x v m m^)
-           (eval-expo e m v))]))))
+           (eval-expo e m v))]
+        [(fresh (c1 c2 c1^ m^ o^)
+           (== `((seq ,c1 ,c2) ,m ,o) in-state)
+           (->o `(,c1 ,m ,o) `(,c1^ ,m^ ,o^))
+           (conde
+             [(== 'stop c1^) (== `(,c2 ,m^ ,o^) out-state)]
+             [(=/= 'stop c1^) (== `((seq ,c1^ ,c2) ,m^ ,o^) out-state)]))]))))
 
 (test-check "lookupo-1"
   (run 5 (q)
