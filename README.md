@@ -5,7 +5,7 @@ Relational implementation of type system and semantics from "Precise Enforcement
 
 http://people.seas.harvard.edu/~aslan/ccs12.pdf
 
-To run the tests, load the file ```pse.scm``` in the ```miniKanren-version``` directory.  All code is written in miniKanren (http://www.miniKanren.net), and tested under Petite Chez Scheme 8.4.
+To run the tests, load the file ```pse.scm``` in the ```miniKanren-version``` directory.  All code is written in miniKanren (http://www.miniKanren.org), and tested under Petite Chez Scheme 8.4.
 
 TODO:
 
