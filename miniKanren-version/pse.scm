@@ -148,7 +148,14 @@
            (->o `(,c1 ,m ,o) `(,c1^ ,m^ ,o^))
            (conde
              [(== 'stop c1^) (== `(,c2 ,m^ ,o^) out-state)]
-             [(=/= 'stop c1^) (== `((seq ,c1^ ,c2) ,m^ ,o^) out-state)]))]))))
+             [(=/= 'stop c1^) (== `((seq ,c1^ ,c2) ,m^ ,o^) out-state)]))]
+        [(fresh (e m v c1 c2 ci n n*)
+           (== `((if ,e ,c1 ,c2) ,m ,o) in-state)
+           (conde
+             [(== `(intval (,n . ,n*)) v) (== ci c1)]
+             [(== '(intval ()) v) (== ci c2)])
+           (eval-expo e m v)
+           (->o `(,ci ,m ,o) out-state))]))))
 
 (test-check "lookupo-1"
   (run 5 (q)
