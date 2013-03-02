@@ -257,6 +257,26 @@
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW)) HIGH (assign h (- h low)) LOW)))
 
+(test-check "simple-!-o-5"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(output ,LOW (intexp (1))) c)
+      (== HIGH pc)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '())
+
+(test-check "simple-!-o-6"
+  (run* (q)
+    (fresh (gamma pc c l)
+      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `(output ,LOW (intexp (1))) c)
+      (== LOW pc)
+      (!-o gamma pc c l)
+      (== `(,gamma ,pc ,c ,l) q)))
+  '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
+
 ;;; Uh oh!  According to the paper, the termination level of this
 ;;; while loop should be HIGH.
 (test-check "simple-!-o-2"
