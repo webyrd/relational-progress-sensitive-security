@@ -155,7 +155,17 @@
              [(== `(intval (,n . ,n*)) v) (== ci c1)]
              [(== '(intval ()) v) (== ci c2)])
            (eval-expo e m v)
-           (->o `(,ci ,m ,o) out-state))]))))
+           (->o `(,ci ,m ,o) out-state))]
+        [(fresh (e c m o v n n*)
+           (== `((while ,e ,c) ,m ,o) in-state)
+           (conde
+             [(== `(intval (,n . ,n*)) v) (== `((seq c (while ,e ,c)) ,m ,o) out-state)]
+             [(== '(intval ()) v) (== `(stop ,m ,o) out-state)])
+           (eval-expo e m v))]))))
+
+(define ->*o
+  (lambda (in-state out-state)
+    '???))
 
 (test-check "lookupo-1"
   (run 5 (q)
