@@ -161,6 +161,11 @@
            (conde
              [(== `(intval (,n . ,n*)) v) (== `((seq c (while ,e ,c)) ,m ,o) out-state)]
              [(== '(intval ()) v) (== `(stop ,m ,o) out-state)])
+           (eval-expo e m v))]
+        [(fresh (l e m o v o^)
+           (== `((output ,l ,e) ,m ,o) in-state)
+           (== `(stop ,m ,o^) out-state)
+           (ext-envo v l o o^)
            (eval-expo e m v))]))))
 
 (define ->*o
