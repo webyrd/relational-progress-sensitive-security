@@ -18,6 +18,10 @@
 (define LOW 'LOW)
 (define HIGH 'HIGH)
 
+(define TERMINATE 'TERMINATE)
+(define DIVERGE 'DIVERGE)
+(define UNKNOWN 'UNKNOWN)
+
 (define ext-envo
   (lambda (x v m m^)
     (fresh (x* v*)
@@ -132,6 +136,18 @@
               [(<=o n1 n2)
                (== '(intval ()) v)])]))])))
 
+(define Oo
+;;; Dummy termination oracle relation.  We skip the problem of
+;;; actually implementing an oracle.
+;;;
+;;; Technically, Oo is implicitly supposed to be passed the original
+;;; program c0 and the initial memory m0 as well.
+  (lambda (p m o v)
+    (conde
+      [(== TERMINATE v)]
+      [(== DIVERGE v)]
+      [(== UNKNOWN v)])))
+
 (define ->o
   (lambda (in-state out-state)
     (fresh (m o)
@@ -166,11 +182,22 @@
            (== `((output ,l ,e) ,m ,o) in-state)
            (== `(stop ,m ,o^) out-state)
            (ext-envo v l o o^)
-           (eval-expo e m v))]))))
+           (eval-expo e m v))]
+        [(fresh (p c m o v)
+           (== `((cast ,p ,c) ,m ,o) in-state)
+           (== `(,c ,m ,o) out-state)
+           (conde
+             [(== TERMINATE v)]
+             [(== DIVERGE v)])
+           (Oo p m o v))]))))
 
 (define ->*o
   (lambda (in-state out-state)
-    '???))
+    (fresh (state)
+      (conda
+        [(->o in-state state)
+         (->*o state out-state)]
+        [else (== in-state out-state)]))))
 
 (test-check "lookupo-1"
   (run 5 (q)
