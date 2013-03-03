@@ -44,6 +44,8 @@
 (define bin-opo
   (lambda (op)
     (conde
+      [(== '= op)]
+      [(== '+ op)]
       [(== '- op)]
       [(== '> op)])))
 
@@ -126,6 +128,13 @@
          (eval-expo e1 m `(intval ,n1))
          (eval-expo e2 m `(intval ,n2))
          (conde
+           [(== '= bin-op)
+            (conde
+              [(== n1 n2) (== '(intval (1)) v)]
+              [(=/= n1 n2) (== '(intval ()) v)])]
+           [(== '+ bin-op)
+            (pluso n1 n2 n3)
+            (== `(intval ,n3) v)]
            [(== '- bin-op)
             (minuso n1 n2 n3)
             (== `(intval ,n3) v)]
@@ -199,7 +208,7 @@
       (conda
         [(->o in-state state)
          (->*o state out-state)]
-        [else (== in-state out-state)]))))
+        [(== #f #f) (== in-state out-state)]))))
 
 (test-check "lookupo-1"
   (run 5 (q)
@@ -225,7 +234,7 @@
     ((((_.0 _.1 _.2 _.3 _.4 . _.5) (_.6 _.7 _.8 _.9 _.10 . _.11)) _.4 _.10) (=/= ((_.4 _.0)) ((_.4 _.1)) ((_.4 _.2)) ((_.4 _.3))) (sym _.4))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 . _.6) (_.7 _.8 _.9 _.10 _.11 _.12 . _.13)) _.5 _.12) (=/= ((_.5 _.0)) ((_.5 _.1)) ((_.5 _.2)) ((_.5 _.3)) ((_.5 _.4))) (sym _.5))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 _.6 . _.7) (_.8 _.9 _.10 _.11 _.12 _.13 _.14 . _.15)) _.6 _.14) (=/= ((_.6 _.0)) ((_.6 _.1)) ((_.6 _.2)) ((_.6 _.3)) ((_.6 _.4)) ((_.6 _.5))) (sym _.6))
-    ((((_.0 . _.1) (HIGH . _.2)) (- _.0 (intexp _.3)) HIGH) (sym _.0))
+    ((((_.0 . _.1) (HIGH . _.2)) (= _.0 (intexp _.3)) HIGH) (sym _.0))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 _.6 _.7 . _.8) (_.9 _.10 _.11 _.12 _.13 _.14 _.15 _.16 . _.17)) _.7 _.16) (=/= ((_.7 _.0)) ((_.7 _.1)) ((_.7 _.2)) ((_.7 _.3)) ((_.7 _.4)) ((_.7 _.5)) ((_.7 _.6))) (sym _.7))))
 
 (test-check "simple-!-eo-1"
@@ -444,9 +453,9 @@
     ((_.0 ((_.1 _.2 _.3 _.0 . _.4) (_.5 _.6 _.7 _.8 . _.9)) _.8) (=/= ((_.0 _.1)) ((_.0 _.2)) ((_.0 _.3))) (sym _.0))
     ((_.0 ((_.1 _.2 _.3 _.4 _.0 . _.5) (_.6 _.7 _.8 _.9 _.10 . _.11)) _.10) (=/= ((_.0 _.1)) ((_.0 _.2)) ((_.0 _.3)) ((_.0 _.4))) (sym _.0))
     ((_.0 ((_.1 _.2 _.3 _.4 _.5 _.0 . _.6) (_.7 _.8 _.9 _.10 _.11 _.12 . _.13)) _.12) (=/= ((_.0 _.1)) ((_.0 _.2)) ((_.0 _.3)) ((_.0 _.4)) ((_.0 _.5))) (sym _.0))
-    ((- (intexp _.0) (intexp _.0)) _.1 (intval ()))
+    ((= (intexp _.0) (intexp _.0)) _.1 (intval (1)))
     ((_.0 ((_.1 _.2 _.3 _.4 _.5 _.6 _.0 . _.7) (_.8 _.9 _.10 _.11 _.12 _.13 _.14 . _.15)) _.14) (=/= ((_.0 _.1)) ((_.0 _.2)) ((_.0 _.3)) ((_.0 _.4)) ((_.0 _.5)) ((_.0 _.6))) (sym _.0))
-    ((_.0 ((_.1 _.2 _.3 _.4 _.5 _.6 _.7 _.0 . _.8) (_.9 _.10 _.11 _.12 _.13 _.14 _.15 _.16 . _.17)) _.16) (=/= ((_.0 _.1)) ((_.0 _.2)) ((_.0 _.3)) ((_.0 _.4)) ((_.0 _.5)) ((_.0 _.6)) ((_.0 _.7))) (sym _.0))))
+    (((= (intexp _.0) (intexp _.1)) _.2 (intval ())) (=/= ((_.0 _.1))))))
 
 (test-check "eval-expo-2"
   (run 10 (q)
@@ -454,16 +463,16 @@
       (== `(,bin-op ,e1 ,e2) e)
       (eval-expo e m v)
       (== `(,e ,m ,v) q)))
-  '(((- (intexp _.0) (intexp _.0)) _.1 (intval ()))
-    ((- (intexp (_.0 . _.1)) (intexp ())) _.2 (intval (_.0 . _.1)))
-    ((- (intexp (0 1)) (intexp (1))) _.0 (intval (1)))
-    (((- (intexp _.0) _.1) ((_.1 . _.2) ((intval _.0) . _.3)) (intval ())) (sym _.1))
-    ((> (intexp _.0) (intexp _.0)) _.1 (intval ()))
-    (((- (intexp (_.0 . _.1)) _.2) ((_.2 . _.3) ((intval ()) . _.4)) (intval (_.0 . _.1))) (sym _.2))
-    ((- (intexp (1 _.0 . _.1)) (intexp (1))) _.2 (intval (0 _.0 . _.1)))
-    ((> (intexp (_.0 . _.1)) (intexp ())) _.2 (intval (1)))
-    (((- (intexp (0 1)) _.0) ((_.0 . _.1) ((intval (1)) . _.2)) (intval (1))) (sym _.0))
-    ((- (intexp (0 0 1)) (intexp (1))) _.0 (intval (1 1)))))
+  '(((= (intexp _.0) (intexp _.0)) _.1 (intval (1)))
+    (((= (intexp _.0) (intexp _.1)) _.2 (intval ())) (=/= ((_.0 _.1))))
+    (((= (intexp _.0) _.1) ((_.1 . _.2) ((intval _.0) . _.3)) (intval (1))) (sym _.1))
+    (((= (intexp _.0) _.1) ((_.1 . _.2) ((intval _.3) . _.4)) (intval ())) (=/= ((_.0 _.3))) (sym _.1))
+    ((+ (intexp _.0) (intexp ())) _.1 (intval _.0))
+    (((= (intexp _.0) _.1) ((_.2 _.1 . _.3) (_.4 (intval _.0) . _.5)) (intval (1))) (=/= ((_.1 _.2))) (sym _.1))
+    ((+ (intexp ()) (intexp (_.0 . _.1))) _.2 (intval (_.0 . _.1)))
+    (((= (intexp _.0) _.1) ((_.2 _.1 . _.3) (_.4 (intval _.5) . _.6)) (intval ())) (=/= ((_.0 _.5)) ((_.1 _.2))) (sym _.1))
+    ((+ (intexp (1)) (intexp (1))) _.0 (intval (0 1)))
+    (((= (intexp _.0) _.1) ((_.2 _.3 _.1 . _.4) (_.5 _.6 (intval _.0) . _.7)) (intval (1))) (=/= ((_.1 _.2)) ((_.1 _.3))) (sym _.1))))
 
 (test-check "eval-expo-3"
   (run 10 (q)
@@ -481,3 +490,88 @@
     (((> (intexp (_.0 . _.1)) _.2) ((_.2 . _.3) ((intval ()) . _.4)) (intval (1))) (sym _.2))
     ((> (intexp (_.0 _.1 _.2 . _.3)) (intexp (_.4 1))) _.5 (intval (1)))
     (((> (intexp ()) _.0) ((_.0 . _.1) ((intval (_.2 . _.3)) . _.4)) (intval ())) (sym _.0))))
+
+(test-check "assign-1"
+  (run* (q)
+    (fresh (gamma c l)
+      (== `((i) (,LOW)) gamma)
+      (== '(assign i (+ i (intval (1))))
+          c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '())
+
+(test-check "assign-2"
+  (run* (q)
+    (fresh (gamma c l)
+      (== `((i) (,HIGH)) gamma)
+      (== '(assign i (+ i (intexp (1))))
+          c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '((((i) (HIGH)) (assign i (+ i (intexp (1)))) LOW)))
+
+(test-check "loop-1"
+  (run* (q)
+    (fresh (gamma c l il secretl)
+      (== `((secret i) (,il ,secretl)) gamma)
+      (== '(while (> secret i)
+             (assign i (+ i (intexp (1)))))
+          c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '((((secret i) (HIGH HIGH))
+     (while (> secret i) (assign i (+ i (intexp (1)))))
+     HIGH)
+    (((secret i) (LOW HIGH))
+     (while (> secret i) (assign i (+ i (intexp (1)))))
+     HIGH)
+    (((secret i) (LOW LOW))
+     (while (> secret i) (assign i (+ i (intexp (1)))))
+     LOW)))
+
+(test-check "loop-2"
+  (run* (q)
+    (fresh (gamma c l xl yl)
+      (== `((x y) (,xl ,yl)) gamma)
+      (== `(while (> (intexp ,(build-num 10)) x)
+             (seq
+               (assign y (intexp ,(build-num 0)))
+               (seq
+                 (while (> (intexp ,(build-num 10)) y)
+                   (assign y (+ y (intexp ,(build-num 1)))))
+                 (assign x (+ x (intexp ,(build-num 1)))))))
+          c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '((((x y) (HIGH HIGH))
+     (while
+         (> (intexp (0 1 0 1)) x)
+       (seq (assign y (intexp ()))
+            (seq (while
+                     (> (intexp (0 1 0 1)) y)
+                   (assign y (+ y (intexp (1)))))
+                 (assign x (+ x (intexp (1)))))))
+     HIGH)
+    (((x y) (LOW LOW))
+     (while
+         (> (intexp (0 1 0 1)) x)
+       (seq (assign y (intexp ()))
+            (seq (while
+                     (> (intexp (0 1 0 1)) y)
+                   (assign y (+ y (intexp (1)))))
+                 (assign x (+ x (intexp (1)))))))
+     LOW)))
+
+(test-check "demo-4"
+  (run* (q)
+    (fresh (gamma c l)
+      (== `((i secret) (,HIGH ,HIGH)) gamma)
+      (== '(while (> secret i)
+             (assign i (+ i (intexp (1)))))
+          c)
+      (typeo gamma c l)
+      (== `(,gamma ,c ,l) q)))
+  '((((i secret) (HIGH HIGH))
+     (while (> secret i) (assign i (+ i (intexp (1)))))
+     HIGH)))
