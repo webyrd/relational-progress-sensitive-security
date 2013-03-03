@@ -194,6 +194,8 @@
 (define ->*o
   (lambda (in-state out-state)
     (fresh (state)
+;;; Dirty conda, playing in the mud!
+;;; Wish I new a cleaner way to do this.
       (conda
         [(->o in-state state)
          (->*o state out-state)]
