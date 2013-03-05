@@ -35,8 +35,43 @@
       (typeo ctx cmd q)))
   '())
 
+(test-check "tcmdEleven"
+  (run* (q)
+    (fresh (ctx cmd)
+      (== `((x y) (,SECRET ,PUBLIC)) ctx)
+      (== (parse-cmd
+            '(cast p-tag
+                   (seq
+                     (assign x 1)
+                     (seq
+                       (assign y 10)
+                       (cast q-tag
+                             (while (< x 100)
+                               (inc x)))))))
+          cmd)
+      (typeo ctx cmd q)))
+  '())
 
-#;(test-check "tcmd"
+(test-check "tcmdTwelve"
+  (run* (q)
+    (fresh (ctx cmd)
+      (== `((x y z) (,SECRET ,SECRET ,SECRET)) ctx)
+      (== (parse-cmd
+            '(cast p-tag
+                   (while (< x 10)
+                     (seq
+                       (assign y 0)
+                       (seq
+                         (while (< y 10)
+                           (seq
+                             (dec x)
+                             (inc y)))
+                         (inc x))))))
+          cmd)
+      (typeo ctx cmd q)))
+  '(PUBLIC))
+
+#;(test-check ""
   (run* (q)
     (fresh (ctx cmd)
       (== ctx)
