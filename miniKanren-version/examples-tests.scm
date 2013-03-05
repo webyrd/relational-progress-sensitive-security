@@ -3,21 +3,21 @@
 (test-check "almost-example-1"
 ;;; uses !-o instead of typeo
   (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+    (fresh (ctx pc c l)
+      (== `((h low) (,SECRET ,PUBLIC)) ctx)
       (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,PUBLIC (intexp (1)))) c)
-      (!-o gamma pc c l)
-      (== `(,gamma ,pc ,c ,l) q)))
+      (!-o ctx pc c l)
+      (== `(,ctx ,pc ,c ,l) q)))
   '())
 
 (test-check "almost-example-2"
 ;;; uses !-o instead of typeo  
   (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+    (fresh (ctx pc c l)
+      (== `((h low) (,SECRET ,PUBLIC)) ctx)
       (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,PUBLIC (intexp (1)))) c)
-      (!-o gamma pc c l)
-      (== `(,gamma ,pc ,c ,l) q)))
+      (!-o ctx pc c l)
+      (== `(,ctx ,pc ,c ,l) q)))
   '((((h low) (SECRET PUBLIC))
      PUBLIC
      (seq (cast
@@ -28,20 +28,20 @@
 
 (test-check "example-1"
   (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+    (fresh (ctx pc c l)
+      (== `((h low) (,SECRET ,PUBLIC)) ctx)
       (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,PUBLIC (intexp (1)))) c)
-      (typeo gamma c l)
-      (== `(,gamma ,c ,l) q)))
+      (typeo ctx c l)
+      (== `(,ctx ,c ,l) q)))
   '())
 
 (test-check "example-2"
   (run* (q)
-    (fresh (gamma pc c l)
-      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+    (fresh (ctx pc c l)
+      (== `((h low) (,SECRET ,PUBLIC)) ctx)
       (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,PUBLIC (intexp (1)))) c)
-      (typeo gamma c l)
-      (== `(,gamma ,c ,l) q)))
+      (typeo ctx c l)
+      (== `(,ctx ,c ,l) q)))
   '((((h low) (SECRET PUBLIC))
      (seq (cast
            p-tag
