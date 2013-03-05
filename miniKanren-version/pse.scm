@@ -41,8 +41,9 @@
       [(seq ,c1 ,c2) `(seq ,(parse-cmd c1) ,(parse-cmd c2))]
       [(while ,e ,c) `(while ,(parse-exp e) ,(parse-cmd c))]
       [(if ,e ,c1 ,c2) `(if ,(parse-exp e) ,(parse-cmd c1) ,(parse-cmd c2))]
-;;; convenience command
-      [(inc ,x) `(assign ,x (+ ,x ,(parse-exp 1)))])))
+;;; convenience commands
+      [(inc ,x) `(assign ,x (+ ,x ,(parse-exp 1)))]
+      [(dec ,x) `(assign ,x (- ,x ,(parse-exp 1)))])))
 
 (define ext-envo
   (lambda (x v m m^)
