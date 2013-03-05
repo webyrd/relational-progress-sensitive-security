@@ -1,6 +1,7 @@
 (load "mk.scm")
 (load "numbers.scm")
 (load "lookupo.scm")
+(load "pmatch.scm")
 (load "test-check.scm")
 
 ;;; Relational implementation of type system and semantics from
@@ -21,6 +22,27 @@
 (define TERMINATE 'TERMINATE)
 (define DIVERGE 'DIVERGE)
 (define UNKNOWN 'UNKNOWN)
+
+(define parse-exp
+  (lambda (exp)
+    (pmatch exp
+      [,n (guard (number? n)) `(intexp ,(build-num n))]
+      [,x (guard (symbol? x)) x]
+      [(,bin-op ,e1 ,e2) (guard (memq bin-op '(= + - <)))
+       `(,bin-op ,(parse-exp e1) ,(parse-exp e2))])))
+
+(define parse-cmd
+  (lambda (cmd)
+    (pmatch cmd
+      [skip 'skip]
+      [(cast ,p ,c) `(cast ,p ,(parse-cmd c))]
+      [(output ,e) `(output ,PUBLIC ,(parse-exp e))]
+      [(assign ,x ,e) `(assign ,x ,(parse-exp e))]
+      [(seq ,c1 ,c2) `(seq ,(parse-cmd c1) ,(parse-cmd c2))]
+      [(while ,e ,c) `(while ,(parse-exp e) ,(parse-cmd c))]
+      [(if ,e ,c1 ,c2) `(if ,(parse-exp e) ,(parse-cmd c1) ,(parse-cmd c2))]
+;;; convenience command
+      [(inc ,x) `(assign ,x (+ ,x ,(parse-exp 1)))])))
 
 (define ext-envo
   (lambda (x v m m^)
@@ -209,6 +231,22 @@
         [(->o in-state state)
          (->*o state out-state)]
         [(== #f #f) (== in-state out-state)]))))
+
+(test-check "parse-cmd-1"
+  (parse-cmd '(seq
+               (while (< i MAXINT)
+                 (while (< i secret)
+                   skip))
+               (seq
+                 (output 0)
+                 (inc i))))
+  `(seq
+     (while (< i MAXINT)
+       (while (< i secret)
+         skip))
+    (seq
+      (output ,PUBLIC (intexp ,(build-num 0)))
+      (assign i (+ i (intexp ,(build-num 1)))))))
 
 (test-check "lookupo-1"
   (run 5 (q)
