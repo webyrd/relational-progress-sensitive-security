@@ -3,13 +3,13 @@
 (test-check "demo-1"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i MAXINT secret) (,LOW ,LOW ,HIGH)) gamma)
+      (== `((i MAXINT secret) (,PUBLIC ,PUBLIC ,SECRET)) gamma)
       (== `(seq
              (while (< i MAXINT)
                (while (< i secret)
                  skip))
              (seq
-               (output ,LOW (intexp ,(build-num 0)))
+               (output ,PUBLIC (intexp ,(build-num 0)))
                (assign i (+ i (intexp ,(build-num 1))))))
           c)
       (typeo gamma c l)
@@ -19,11 +19,11 @@
 (test-check "demo-2"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i secret) (,HIGH ,HIGH)) gamma)
+      (== `((i secret) (,SECRET ,SECRET)) gamma)
       (== `(seq
              (while (< i secret)
                (assign i (+ i (intexp ,(build-num 1)))))
-             (output ,LOW (intexp ,(build-num 0))))
+             (output ,PUBLIC (intexp ,(build-num 0))))
           c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
@@ -32,13 +32,13 @@
 (test-check "demo-3"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i secret) (,HIGH ,HIGH)) gamma)
+      (== `((i secret) (,SECRET ,SECRET)) gamma)
       (== `(seq
              (while (< i secret)
                (seq
                  (assign i (+ i (intexp ,(build-num 1))))
-                 (output ,LOW (intexp ,(build-num 0)))))
-             (output ,LOW (intexp ,(build-num 0))))
+                 (output ,PUBLIC (intexp ,(build-num 0)))))
+             (output ,PUBLIC (intexp ,(build-num 0))))
           c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
@@ -47,24 +47,24 @@
 (test-check "demo-4"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i secret) (,HIGH ,HIGH)) gamma)
+      (== `((i secret) (,SECRET ,SECRET)) gamma)
       (== '(while (< i secret)
              (assign i (+ i (intexp (1)))))
           c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
-  '((((i secret) (HIGH HIGH))
+  '((((i secret) (SECRET SECRET))
      (while (< i secret) (assign i (+ i (intexp (1)))))
-     HIGH)))
+     SECRET)))
 
 (test-check "demo-5"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i secret) (,LOW ,HIGH)) gamma)
+      (== `((i secret) (,PUBLIC ,SECRET)) gamma)
       (== `(seq
              (while (< i secret)
                (assign i (+ i (intexp ,(build-num 1)))))
-             (output ,LOW (intexp ,(build-num 0))))
+             (output ,PUBLIC (intexp ,(build-num 0))))
           c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
@@ -79,8 +79,8 @@
           c)
       (typeo gamma c l)
       (== `(,gamma ,l) q)))
-  '((((secret i) (_.0 HIGH)) HIGH)
-    (((secret i) (LOW LOW)) LOW)))
+  '((((secret i) (_.0 SECRET)) SECRET)
+    (((secret i) (PUBLIC PUBLIC)) PUBLIC)))
 
 (test-check "loop-2"
   (run* (q)
@@ -96,7 +96,7 @@
           c)
       (typeo gamma c l)
       (== `(,gamma ,l) q)))
-  '((((x y) (HIGH HIGH))
-     HIGH)
-    (((x y) (LOW LOW))
-     LOW)))
+  '((((x y) (SECRET SECRET))
+     SECRET)
+    (((x y) (PUBLIC PUBLIC))
+     PUBLIC)))

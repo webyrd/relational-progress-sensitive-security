@@ -15,8 +15,8 @@
 ;;; * implement semantics
 ;;; * implement multi-level lattices
 
-(define LOW 'LOW)
-(define HIGH 'HIGH)
+(define PUBLIC 'PUBLIC)
+(define SECRET 'SECRET)
 
 (define TERMINATE 'TERMINATE)
 (define DIVERGE 'DIVERGE)
@@ -31,15 +31,15 @@
 (define lattice-joino
   (lambda (l1 l2 l3)
     (conde
-      [(== HIGH l1) (== HIGH l3)]
-      [(== LOW l1) (== HIGH l2) (== HIGH l3)]
-      [(== LOW l1) (== LOW l2) (== LOW l3)])))
+      [(== SECRET l1) (== SECRET l3)]
+      [(== PUBLIC l1) (== SECRET l2) (== SECRET l3)]
+      [(== PUBLIC l1) (== PUBLIC l2) (== PUBLIC l3)])))
 
 (define lattice-leqo
   (lambda (l1 l2)
     (conde
-      [(== HIGH l2)]
-      [(== LOW l2) (== LOW l1)])))
+      [(== SECRET l2)]
+      [(== PUBLIC l2) (== PUBLIC l1)])))
 
 (define bin-opo
   (lambda (op)
@@ -55,7 +55,7 @@
     (conde
       [(fresh (n)
          (== `(intexp ,n) e)
-         (== LOW term-level))]
+         (== PUBLIC term-level))]
       [(symbolo e)
        (lookupo e gamma term-level)]
       [(fresh (bin-op e1 e2 tl1 tl2)
@@ -69,20 +69,20 @@
 (define !-o
   (lambda (gamma pc comm term-level)
     (conde
-      [(== 'skip comm) (== LOW term-level)]
+      [(== 'skip comm) (== PUBLIC term-level)]
       [(fresh (p c l)
          (== `(cast ,p ,c) comm)
-         (== LOW term-level)
-         (== LOW pc)
-         (!-o gamma HIGH c l))]
+         (== PUBLIC term-level)
+         (== PUBLIC pc)
+         (!-o gamma SECRET c l))]
       [(fresh (l e l^)
          (== `(output ,l ,e) comm)
-         (== LOW term-level)
+         (== PUBLIC term-level)
          (lattice-joino pc l^ l)
          (!-eo gamma e l^))]
       [(fresh (x e l^ xl pcl^)
          (== `(assign ,x ,e) comm)
-         (== LOW term-level)
+         (== PUBLIC term-level)
          (lattice-joino pc l^ pcl^)
          (lattice-leqo pcl^ xl)
          (lookupo x gamma xl)
@@ -112,7 +112,7 @@
 
 (define typeo
   (lambda (gamma comm term-level)
-    (!-o gamma LOW comm term-level)))
+    (!-o gamma PUBLIC comm term-level)))
 
 (define eval-expo
   (lambda (e m v)
@@ -226,7 +226,7 @@
     (fresh (gamma e l)
       (!-eo gamma e l)
       (== `(,gamma ,e ,l) q)))
-  '((_.0 (intexp _.1) LOW)
+  '((_.0 (intexp _.1) PUBLIC)
     ((((_.0 . _.1) (_.2 . _.3)) _.0 _.2) (sym _.0))
     ((((_.0 _.1 . _.2) (_.3 _.4 . _.5)) _.1 _.4) (=/= ((_.1 _.0))) (sym _.1))
     ((((_.0 _.1 _.2 . _.3) (_.4 _.5 _.6 . _.7)) _.2 _.6) (=/= ((_.2 _.0)) ((_.2 _.1))) (sym _.2))
@@ -234,35 +234,35 @@
     ((((_.0 _.1 _.2 _.3 _.4 . _.5) (_.6 _.7 _.8 _.9 _.10 . _.11)) _.4 _.10) (=/= ((_.4 _.0)) ((_.4 _.1)) ((_.4 _.2)) ((_.4 _.3))) (sym _.4))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 . _.6) (_.7 _.8 _.9 _.10 _.11 _.12 . _.13)) _.5 _.12) (=/= ((_.5 _.0)) ((_.5 _.1)) ((_.5 _.2)) ((_.5 _.3)) ((_.5 _.4))) (sym _.5))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 _.6 . _.7) (_.8 _.9 _.10 _.11 _.12 _.13 _.14 . _.15)) _.6 _.14) (=/= ((_.6 _.0)) ((_.6 _.1)) ((_.6 _.2)) ((_.6 _.3)) ((_.6 _.4)) ((_.6 _.5))) (sym _.6))
-    ((((_.0 . _.1) (HIGH . _.2)) (= _.0 (intexp _.3)) HIGH) (sym _.0))
+    ((((_.0 . _.1) (SECRET . _.2)) (= _.0 (intexp _.3)) SECRET) (sym _.0))
     ((((_.0 _.1 _.2 _.3 _.4 _.5 _.6 _.7 . _.8) (_.9 _.10 _.11 _.12 _.13 _.14 _.15 _.16 . _.17)) _.7 _.16) (=/= ((_.7 _.0)) ((_.7 _.1)) ((_.7 _.2)) ((_.7 _.3)) ((_.7 _.4)) ((_.7 _.5)) ((_.7 _.6))) (sym _.7))))
 
 (test-check "simple-!-eo-1"
   (run* (q)
     (fresh (gamma e l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== '(intexp ()) e)
       (!-eo gamma e l)
       (== `(,gamma ,e ,l) q)))
-  '((((h low) (HIGH LOW)) (intexp ()) LOW)))
+  '((((h low) (SECRET PUBLIC)) (intexp ()) PUBLIC)))
 
 (test-check "simple-!-eo-2"
   (run* (q)
     (fresh (gamma e l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== '(< (intexp ()) h) e)
       (!-eo gamma e l)
       (== `(,gamma ,e ,l) q)))
-  '((((h low) (HIGH LOW)) (< (intexp ()) h) HIGH)))
+  '((((h low) (SECRET PUBLIC)) (< (intexp ()) h) SECRET)))
 
 (test-check "simple-!-eo-3"
   (run* (q)
     (fresh (gamma e l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== '(- h low) e)
       (!-eo gamma e l)
       (== `(,gamma ,e ,l) q)))
-  '((((h low) (HIGH LOW)) (- h low) HIGH)))
+  '((((h low) (SECRET PUBLIC)) (- h low) SECRET)))
 
 (test-check "!-o-0"
   (run 5 (q)
@@ -270,27 +270,27 @@
       (== `(assign ,x ,e) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((_.0 . _.1) (HIGH . _.2))
-     HIGH
+  '((((_.0 . _.1) (SECRET . _.2))
+     SECRET
      (assign _.0 (intexp _.3))
-     LOW)
-    ((((_.0 . _.1) (HIGH . _.2)) HIGH (assign _.0 _.0) LOW)
+     PUBLIC)
+    ((((_.0 . _.1) (SECRET . _.2)) SECRET (assign _.0 _.0) PUBLIC)
      (sym _.0))
-    ((((_.0 _.1 . _.2) (_.3 HIGH . _.4))
-      HIGH
+    ((((_.0 _.1 . _.2) (_.3 SECRET . _.4))
+      SECRET
       (assign _.1 (intexp _.5))
-      LOW)
+      PUBLIC)
      (=/= ((_.1 _.0))))
-    ((((_.0 _.1 . _.2) (HIGH _.3 . _.4))
-      HIGH
+    ((((_.0 _.1 . _.2) (SECRET _.3 . _.4))
+      SECRET
       (assign _.0 _.1)
-      LOW)
+      PUBLIC)
      (=/= ((_.1 _.0)))
      (sym _.1))
-    ((((_.0 _.1 _.2 . _.3) (HIGH _.4 _.5 . _.6))
-      HIGH
+    ((((_.0 _.1 _.2 . _.3) (SECRET _.4 _.5 . _.6))
+      SECRET
       (assign _.0 _.2)
-      LOW)
+      PUBLIC)
      (=/= ((_.2 _.0)) ((_.2 _.1)))
      (sym _.2))))
 
@@ -299,48 +299,48 @@
     (fresh (gamma pc c l)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((_.0 _.1 skip LOW)
-    (_.0 LOW (cast _.1 skip) LOW)
-    (_.0 LOW (cast _.1 (output HIGH (intexp _.2))) LOW)
-    (_.0 HIGH (output HIGH (intexp _.1)) LOW)
+  '((_.0 _.1 skip PUBLIC)
+    (_.0 PUBLIC (cast _.1 skip) PUBLIC)
+    (_.0 PUBLIC (cast _.1 (output SECRET (intexp _.2))) PUBLIC)
+    (_.0 SECRET (output SECRET (intexp _.1)) PUBLIC)
     ((((_.0 . _.1) (_.2 . _.3))
-      LOW
-      (cast _.4 (output HIGH _.0))
-      LOW)
+      PUBLIC
+      (cast _.4 (output SECRET _.0))
+      PUBLIC)
      (sym _.0))
-    ((((_.0 . _.1) (_.2 . _.3)) HIGH (output HIGH _.0) LOW)
+    ((((_.0 . _.1) (_.2 . _.3)) SECRET (output SECRET _.0) PUBLIC)
      (sym _.0))
     ((((_.0 _.1 . _.2) (_.3 _.4 . _.5))
-      LOW
-      (cast _.6 (output HIGH _.1))
-      LOW)
+      PUBLIC
+      (cast _.6 (output SECRET _.1))
+      PUBLIC)
      (=/= ((_.1 _.0)))
      (sym _.1))
-    (_.0 LOW (output LOW (intexp _.1)) LOW)
+    (_.0 PUBLIC (output PUBLIC (intexp _.1)) PUBLIC)
     ((((_.0 _.1 _.2 . _.3) (_.4 _.5 _.6 . _.7))
-      LOW
-      (cast _.8 (output HIGH _.2))
-      LOW)
+      PUBLIC
+      (cast _.8 (output SECRET _.2))
+      PUBLIC)
      (=/= ((_.2 _.0)) ((_.2 _.1)))
      (sym _.2))
-    (((_.0 . _.1) (HIGH . _.2))
-     LOW
+    (((_.0 . _.1) (SECRET . _.2))
+     PUBLIC
      (cast _.3 (assign _.0 (intexp _.4)))
-     LOW)))
+     PUBLIC)))
 
 (test-check "simple-!-o-1"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(output ,LOW (intexp (1))) c)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+      (== `(output ,PUBLIC (intexp (1))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
+  '((((h low) (SECRET PUBLIC)) PUBLIC (output PUBLIC (intexp (1))) PUBLIC)))
 
 (test-check "simple-!-o-4"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== `(assign low h) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
@@ -349,19 +349,19 @@
 (test-check "simple-!-o-3"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== `(assign h (- h low)) c)
-      (== HIGH pc)
+      (== SECRET pc)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW)) HIGH (assign h (- h low)) LOW)))
+  '((((h low) (SECRET PUBLIC)) SECRET (assign h (- h low)) PUBLIC)))
 
 (test-check "simple-!-o-5"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(output ,LOW (intexp (1))) c)
-      (== HIGH pc)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+      (== `(output ,PUBLIC (intexp (1))) c)
+      (== SECRET pc)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
   '())
@@ -369,28 +369,28 @@
 (test-check "simple-!-o-6"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(output ,LOW (intexp (1))) c)
-      (== LOW pc)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
+      (== `(output ,PUBLIC (intexp (1))) c)
+      (== PUBLIC pc)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW)) LOW (output LOW (intexp (1))) LOW)))
+  '((((h low) (SECRET PUBLIC)) PUBLIC (output PUBLIC (intexp (1))) PUBLIC)))
 
 (test-check "simple-!-o-2"
   (run* (q)
     (fresh (gamma pc c l)
-      (== `((h low) (,HIGH ,LOW)) gamma)
+      (== `((h low) (,SECRET ,PUBLIC)) gamma)
       (== `(while (< (intexp ()) h) (assign h (- h low))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
-  '((((h low) (HIGH LOW))
-     HIGH
+  '((((h low) (SECRET PUBLIC))
+     SECRET
      (while (< (intexp ()) h) (assign h (- h low)))
-     HIGH)
-    (((h low) (HIGH LOW))
-     LOW
+     SECRET)
+    (((h low) (SECRET PUBLIC))
+     PUBLIC
      (while (< (intexp ()) h) (assign h (- h low)))
-     HIGH)))
+     SECRET)))
 
 (test-check "eval-expo-1"
   (run 10 (q)
@@ -445,7 +445,7 @@
 (test-check "assign-1"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i) (,LOW)) gamma)
+      (== `((i) (,PUBLIC)) gamma)
       (== '(assign i (+ i (intval (1))))
           c)
       (typeo gamma c l)
@@ -455,9 +455,9 @@
 (test-check "assign-2"
   (run* (q)
     (fresh (gamma c l)
-      (== `((i) (,HIGH)) gamma)
+      (== `((i) (,SECRET)) gamma)
       (== '(assign i (+ i (intexp (1))))
           c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
-  '((((i) (HIGH)) (assign i (+ i (intexp (1)))) LOW)))
+  '((((i) (SECRET)) (assign i (+ i (intexp (1)))) PUBLIC)))
