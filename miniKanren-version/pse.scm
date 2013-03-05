@@ -47,7 +47,7 @@
       [(== '= op)]
       [(== '+ op)]
       [(== '- op)]
-      [(== '> op)])))
+      [(== '< op)])))
 
 ;;; type judgements for expressions (not explicitly given in the paper)
 (define !-eo
@@ -138,11 +138,11 @@
            [(== '- bin-op)
             (minuso n1 n2 n3)
             (== `(intval ,n3) v)]
-           [(== '> bin-op)
+           [(== '< bin-op)
             (conde
-              [(<o n2 n1)
+              [(<o n1 n2)
                (== '(intval (1)) v)]
-              [(<=o n1 n2)
+              [(<=o n2 n1)
                (== '(intval ()) v)])]))])))
 
 (define Oo
@@ -250,10 +250,10 @@
   (run* (q)
     (fresh (gamma e l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== '(> h (intexp ())) e)
+      (== '(< (intexp ()) h) e)
       (!-eo gamma e l)
       (== `(,gamma ,e ,l) q)))
-  '((((h low) (HIGH LOW)) (> h (intexp ())) HIGH)))
+  '((((h low) (HIGH LOW)) (< (intexp ()) h) HIGH)))
 
 (test-check "simple-!-eo-3"
   (run* (q)
@@ -380,16 +380,16 @@
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(while (> h (intexp ())) (assign h (- h low))) c)
+      (== `(while (< (intexp ()) h) (assign h (- h low))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW))
      HIGH
-     (while (> h (intexp ())) (assign h (- h low)))
+     (while (< (intexp ()) h) (assign h (- h low)))
      HIGH)
     (((h low) (HIGH LOW))
      LOW
-     (while (> h (intexp ())) (assign h (- h low)))
+     (while (< (intexp ()) h) (assign h (- h low)))
      HIGH)))
 
 (test-check "eval-expo-1"
@@ -428,19 +428,19 @@
 (test-check "eval-expo-3"
   (run 10 (q)
     (fresh (e e1 e2 m v)
-      (== `(> ,e1 ,e2) e)
+      (== `(< ,e1 ,e2) e)
       (eval-expo e m v)
       (== `(,e ,m ,v) q)))
-  '(((> (intexp _.0) (intexp _.0)) _.1 (intval ()))
-    ((> (intexp (_.0 . _.1)) (intexp ())) _.2 (intval (1)))
-    (((> (intexp _.0) _.1) ((_.1 . _.2) ((intval _.0) . _.3)) (intval ())) (sym _.1))
-    ((> (intexp ()) (intexp (_.0 . _.1))) _.2 (intval ()))
-    ((> (intexp (_.0 _.1 . _.2)) (intexp (1))) _.3 (intval (1)))
-    ((> (intexp (1)) (intexp (_.0 _.1 . _.2))) _.3 (intval ()))
-    (((> _.0 (intexp _.1)) ((_.0 . _.2) ((intval _.1) . _.3)) (intval ())) (sym _.0))
-    (((> (intexp (_.0 . _.1)) _.2) ((_.2 . _.3) ((intval ()) . _.4)) (intval (1))) (sym _.2))
-    ((> (intexp (_.0 _.1 _.2 . _.3)) (intexp (_.4 1))) _.5 (intval (1)))
-    (((> (intexp ()) _.0) ((_.0 . _.1) ((intval (_.2 . _.3)) . _.4)) (intval ())) (sym _.0))))
+  '(((< (intexp _.0) (intexp _.0)) _.1 (intval ()))
+    ((< (intexp ()) (intexp (_.0 . _.1))) _.2 (intval (1)))
+    (((< (intexp _.0) _.1) ((_.1 . _.2) ((intval _.0) . _.3)) (intval ())) (sym _.1))
+    ((< (intexp (_.0 . _.1)) (intexp ())) _.2 (intval ()))
+    ((< (intexp (1)) (intexp (_.0 _.1 . _.2))) _.3 (intval (1)))
+    ((< (intexp (_.0 _.1 . _.2)) (intexp (1))) _.3 (intval ()))
+    (((< _.0 (intexp _.1)) ((_.0 . _.2) ((intval _.1) . _.3)) (intval ())) (sym _.0))
+    (((< (intexp ()) _.0) ((_.0 . _.1) ((intval (_.2 . _.3)) . _.4)) (intval (1))) (sym _.0))
+    ((< (intexp (_.0 1)) (intexp (_.1 _.2 _.3 . _.4))) _.5 (intval (1)))
+    (((< (intexp (_.0 . _.1)) _.2) ((_.2 . _.3) ((intval ()) . _.4)) (intval ())) (sym _.2))))
 
 (test-check "assign-1"
   (run* (q)

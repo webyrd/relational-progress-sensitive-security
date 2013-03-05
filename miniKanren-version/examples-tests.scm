@@ -5,7 +5,7 @@
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (while (> h (intexp ())) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
+      (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
   '())
@@ -15,14 +15,14 @@
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
+      (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
       (!-o gamma pc c l)
       (== `(,gamma ,pc ,c ,l) q)))
   '((((h low) (HIGH LOW))
      LOW
      (seq (cast
            p-tag
-           (while (> h (intexp ())) (assign h (- h low))))
+           (while (< (intexp ()) h) (assign h (- h low))))
           (output LOW (intexp (1))))
      LOW)))
 
@@ -30,7 +30,7 @@
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (while (> h (intexp ())) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
+      (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,LOW (intexp (1)))) c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
   '())
@@ -39,12 +39,12 @@
   (run* (q)
     (fresh (gamma pc c l)
       (== `((h low) (,HIGH ,LOW)) gamma)
-      (== `(seq (cast p-tag (while (> h (intexp ())) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
+      (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,LOW (intexp (1)))) c)
       (typeo gamma c l)
       (== `(,gamma ,c ,l) q)))
   '((((h low) (HIGH LOW))
      (seq (cast
            p-tag
-           (while (> h (intexp ())) (assign h (- h low))))
+           (while (< (intexp ()) h) (assign h (- h low))))
           (output LOW (intexp (1))))
      LOW)))
