@@ -78,7 +78,7 @@
 (test-check "loop-1"
   (run* (q)
     (fresh (ctx cmd l il secretl)
-      (== `((secret i) (,il ,secretl)) ctx)
+      (== `((secret i) (,secretl ,il)) ctx)
       (== (parse-cmd
             '(while (< i secret)
                (inc i)))
