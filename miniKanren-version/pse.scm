@@ -28,7 +28,7 @@
     (pmatch exp
       [,n (guard (number? n)) `(intexp ,(build-num n))]
       [,x (guard (symbol? x)) x]
-      [(,bin-op ,e1 ,e2) (guard (memq bin-op '(= + - <)))
+      [(,bin-op ,e1 ,e2) (guard (memq bin-op '(= + - < <=)))
        `(,bin-op ,(parse-exp e1) ,(parse-exp e2))])))
 
 (define parse-cmd
@@ -70,7 +70,8 @@
       [(== '= op)]
       [(== '+ op)]
       [(== '- op)]
-      [(== '< op)])))
+      [(== '< op)]
+      [(== '<= op)])))
 
 ;;; type judgements for expressions (not explicitly given in the paper)
 (define !-eo
@@ -166,6 +167,12 @@
               [(<o n1 n2)
                (== '(intval (1)) v)]
               [(<=o n2 n1)
+               (== '(intval ()) v)])]
+           [(== '<= bin-op)
+            (conde
+              [(<=o n1 n2)
+               (== '(intval (1)) v)]
+              [(<o n2 n1)
                (== '(intval ()) v)])]))])))
 
 (define Oo

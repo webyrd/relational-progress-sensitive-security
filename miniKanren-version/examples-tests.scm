@@ -3,6 +3,49 @@
 (define paper-ctx `((h        h^      hstep   l       l^)
                     (,SECRET ,SECRET ,SECRET ,PUBLIC ,PUBLIC)))
 
+(test-check "tcmdOne"
+  (run* (q)
+    (fresh (ctx cmd)
+      (== `((h l) (,SECRET ,PUBLIC)) ctx)
+      (== (parse-cmd '(assign h 1))
+          cmd)
+      (typeo ctx cmd q)))
+  '(PUBLIC))
+
+(test-check "tcmdTwo"
+  (run* (q)
+    (fresh (ctx cmd)
+      (== `((x y) (,SECRET ,PUBLIC)) ctx)
+      (== (parse-cmd
+            '(cast p-tag
+                   (seq
+                     (assign x 1)
+                     (seq
+                       (assign y 1)
+                       (seq
+                         (assign y 10)
+                         (cast q-tag
+                               (while (<= x y)
+                                 (seq
+                                   (inc x)
+                                   (seq
+                                     (inc x)
+                                     (assign y 10))))))))))
+          cmd)
+      (typeo ctx cmd q)))
+  '())
+
+
+#;(test-check "tcmd"
+  (run* (q)
+    (fresh (ctx cmd)
+      (== ctx)
+      (== (parse-cmd
+            '())
+          cmd)
+      (typeo ctx cmd q)))
+  '???)
+
 (test-check "example-1"
   (run* (q)
     (fresh (cmd)
