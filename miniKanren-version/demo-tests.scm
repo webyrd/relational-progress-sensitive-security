@@ -4,13 +4,14 @@
   (run* (q)
     (fresh (ctx cmd l)
       (== `((i MAXINT secret) (,PUBLIC ,PUBLIC ,SECRET)) ctx)
-      (== `(seq
-             (while (< i MAXINT)
-               (while (< i secret)
-                 skip))
-             (seq
-               (output ,PUBLIC (intexp ,(build-num 0)))
-               (assign i (+ i (intexp ,(build-num 1))))))
+      (== (parse-cmd
+            '(seq
+               (while (< i MAXINT)
+                 (while (< i secret)
+                   skip))
+               (seq
+                 (output 0)
+                 (inc i))))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,cmd ,l) q)))
@@ -20,10 +21,11 @@
   (run* (q)
     (fresh (ctx cmd l)
       (== `((i secret) (,SECRET ,SECRET)) ctx)
-      (== `(seq
-             (while (< i secret)
-               (assign i (+ i (intexp ,(build-num 1)))))
-             (output ,PUBLIC (intexp ,(build-num 0))))
+      (== (parse-cmd
+            '(seq
+               (while (< i secret)
+                 (inc i))
+               (output 0)))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,cmd ,l) q)))
@@ -33,12 +35,13 @@
   (run* (q)
     (fresh (ctx cmd l)
       (== `((i secret) (,SECRET ,SECRET)) ctx)
-      (== `(seq
-             (while (< i secret)
-               (seq
-                 (assign i (+ i (intexp ,(build-num 1))))
-                 (output ,PUBLIC (intexp ,(build-num 0)))))
-             (output ,PUBLIC (intexp ,(build-num 0))))
+      (== (parse-cmd
+            '(seq
+               (while (< i secret)
+                 (seq
+                   (inc i)
+                   (output 0)))
+               (output 0)))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,cmd ,l) q)))
@@ -48,8 +51,9 @@
   (run* (q)
     (fresh (ctx cmd l)
       (== `((i secret) (,SECRET ,SECRET)) ctx)
-      (== '(while (< i secret)
-             (assign i (+ i (intexp (1)))))
+      (== (parse-cmd
+            '(while (< i secret)
+               (inc i)))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,cmd ,l) q)))
@@ -61,10 +65,11 @@
   (run* (q)
     (fresh (ctx cmd l)
       (== `((i secret) (,PUBLIC ,SECRET)) ctx)
-      (== `(seq
-             (while (< i secret)
-               (assign i (+ i (intexp ,(build-num 1)))))
-             (output ,PUBLIC (intexp ,(build-num 0))))
+      (== (parse-cmd
+            '(seq
+               (while (< i secret)
+                 (inc i))
+               (output 0)))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,cmd ,l) q)))
@@ -74,8 +79,9 @@
   (run* (q)
     (fresh (ctx cmd l il secretl)
       (== `((secret i) (,il ,secretl)) ctx)
-      (== `(while (< i secret)
-             (assign i (+ i (intexp ,(build-num 1)))))
+      (== (parse-cmd
+            '(while (< i secret)
+               (inc i)))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,l) q)))
@@ -86,13 +92,14 @@
   (run* (q)
     (fresh (ctx cmd l xl yl)
       (== `((x y) (,xl ,yl)) ctx)
-      (== `(while (< x (intexp ,(build-num 10)))
-             (seq
-               (assign y (intexp ,(build-num 0)))
+      (== (parse-cmd
+            '(while (< x 10)
                (seq
-                 (while (< y (intexp ,(build-num 10)))
-                   (assign y (+ y (intexp ,(build-num 1)))))
-                 (assign x (+ x (intexp ,(build-num 1)))))))
+                 (assign y 0)
+                 (seq
+                   (while (< y 10)
+                     (inc y))
+                   (inc x)))))
           cmd)
       (typeo ctx cmd l)
       (== `(,ctx ,l) q)))

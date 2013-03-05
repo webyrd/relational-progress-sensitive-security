@@ -1,50 +1,33 @@
 ;;; Tests from Examples.hs
 
-(test-check "almost-example-1"
-;;; uses !-o instead of typeo
-  (run* (q)
-    (fresh (ctx pc cmd l)
-      (== `((h low) (,SECRET ,PUBLIC)) ctx)
-      (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,PUBLIC (intexp (1)))) cmd)
-      (!-o ctx pc cmd l)
-      (== `(,ctx ,pc ,cmd ,l) q)))
-  '())
-
-(test-check "almost-example-2"
-;;; uses !-o instead of typeo  
-  (run* (q)
-    (fresh (ctx pc cmd l)
-      (== `((h low) (,SECRET ,PUBLIC)) ctx)
-      (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,PUBLIC (intexp (1)))) cmd)
-      (!-o ctx pc cmd l)
-      (== `(,ctx ,pc ,cmd ,l) q)))
-  '((((h low) (SECRET PUBLIC))
-     PUBLIC
-     (seq (cast
-           p-tag
-           (while (< (intexp ()) h) (assign h (- h low))))
-          (output PUBLIC (intexp (1))))
-     PUBLIC)))
+(define paper-ctx `((h        h^      hstep   l       l^)
+                    (,SECRET ,SECRET ,SECRET ,PUBLIC ,PUBLIC)))
 
 (test-check "example-1"
   (run* (q)
-    (fresh (ctx pc cmd l)
-      (== `((h low) (,SECRET ,PUBLIC)) ctx)
-      (== `(seq (while (< (intexp ()) h) (assign h (- h low))) (output ,PUBLIC (intexp (1)))) cmd)
-      (typeo ctx cmd l)
-      (== `(,ctx ,cmd ,l) q)))
-  '())
+    (fresh (cmd)
+      (== (parse-cmd
+            '(while (< l 10)
+               (seq
+                 (cast p-tag
+                       (while (< l h)
+                         skip))
+                 (inc l))))
+          cmd)
+      (typeo paper-ctx cmd q)))
+  '(PUBLIC))
 
 (test-check "example-2"
   (run* (q)
-    (fresh (ctx pc cmd l)
-      (== `((h low) (,SECRET ,PUBLIC)) ctx)
-      (== `(seq (cast p-tag (while (< (intexp ()) h) (assign h (- h low)))) (output ,PUBLIC (intexp (1)))) cmd)
-      (typeo ctx cmd l)
-      (== `(,ctx ,cmd ,l) q)))
-  '((((h low) (SECRET PUBLIC))
-     (seq (cast
-           p-tag
-           (while (< (intexp ()) h) (assign h (- h low))))
-          (output PUBLIC (intexp (1))))
-     PUBLIC)))
+    (fresh (cmd)
+      (== (parse-cmd
+            '(seq
+               (output 0)
+               (seq
+                 (cast p-tag
+                       (while (< 0 h)
+                         (assign h (- h l))))
+                 (output 1))))
+          cmd)
+      (typeo paper-ctx cmd q)))
+  '(PUBLIC))
