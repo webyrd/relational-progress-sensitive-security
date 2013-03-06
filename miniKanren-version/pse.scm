@@ -104,6 +104,7 @@
          (!-eo gamma e l^))]
       [(fresh (x e l^ xl pcl^)
          (== `(assign ,x ,e) comm)
+         (symbolo x)
          (== PUBLIC term-level)
          (lattice-joino pc l^ pcl^)
          (lattice-leqo pcl^ xl)
@@ -193,6 +194,7 @@
          (== `(stop ,m ,o) out-state)]
         [(fresh (x e v m^)
            (== `((assign ,x ,e) ,m ,o) in-state)
+           (symbolo x)
            (== `(stop ,m^ ,o) out-state)
            (ext-envo x v m m^)
            (eval-expo e m v))]
@@ -314,29 +316,19 @@
       (== `(assign ,x ,exp) cmd)
       (!-o ctx pc cmd l)
       (== `(,ctx ,pc ,cmd ,l) q)))
-  '((((_.0 . _.1) (SECRET . _.2))
-     SECRET
-     (assign _.0 (intexp _.3))
-     PUBLIC)
+  '(((((_.0 . _.1) (SECRET . _.2)) SECRET (assign _.0 (intexp _.3)) PUBLIC)
+     (sym _.0))
     ((((_.0 . _.1) (SECRET . _.2)) SECRET (assign _.0 _.0) PUBLIC)
      (sym _.0))
-    ((((_.0 _.1 . _.2) (_.3 SECRET . _.4))
-      SECRET
-      (assign _.1 (intexp _.5))
-      PUBLIC)
-     (=/= ((_.1 _.0))))
-    ((((_.0 _.1 . _.2) (SECRET _.3 . _.4))
-      SECRET
-      (assign _.0 _.1)
-      PUBLIC)
+    ((((_.0 _.1 . _.2) (_.3 SECRET . _.4)) SECRET (assign _.1 (intexp _.5)) PUBLIC)
      (=/= ((_.1 _.0)))
      (sym _.1))
-    ((((_.0 _.1 _.2 . _.3) (SECRET _.4 _.5 . _.6))
-      SECRET
-      (assign _.0 _.2)
-      PUBLIC)
+    ((((_.0 _.1 . _.2) (SECRET _.3 . _.4)) SECRET (assign _.0 _.1) PUBLIC)
+     (=/= ((_.1 _.0)))
+     (sym _.0 _.1))
+    ((((_.0 _.1 _.2 . _.3) (SECRET _.4 _.5 . _.6)) SECRET (assign _.0 _.2) PUBLIC)
      (=/= ((_.2 _.0)) ((_.2 _.1)))
-     (sym _.2))))
+     (sym _.0 _.2))))
 
 (test-check "!-o-1"
   (run 10 (q)
@@ -347,30 +339,12 @@
     (_.0 PUBLIC (cast _.1 skip) PUBLIC)
     (_.0 PUBLIC (cast _.1 (output SECRET (intexp _.2))) PUBLIC)
     (_.0 SECRET (output SECRET (intexp _.1)) PUBLIC)
-    ((((_.0 . _.1) (_.2 . _.3))
-      PUBLIC
-      (cast _.4 (output SECRET _.0))
-      PUBLIC)
-     (sym _.0))
-    ((((_.0 . _.1) (_.2 . _.3)) SECRET (output SECRET _.0) PUBLIC)
-     (sym _.0))
-    ((((_.0 _.1 . _.2) (_.3 _.4 . _.5))
-      PUBLIC
-      (cast _.6 (output SECRET _.1))
-      PUBLIC)
-     (=/= ((_.1 _.0)))
-     (sym _.1))
+    ((((_.0 . _.1) (_.2 . _.3)) PUBLIC (cast _.4 (output SECRET _.0)) PUBLIC) (sym _.0))
+    ((((_.0 . _.1) (_.2 . _.3)) SECRET (output SECRET _.0) PUBLIC) (sym _.0))
+    ((((_.0 _.1 . _.2) (_.3 _.4 . _.5)) PUBLIC (cast _.6 (output SECRET _.1)) PUBLIC) (=/= ((_.1 _.0))) (sym _.1))
     (_.0 PUBLIC (output PUBLIC (intexp _.1)) PUBLIC)
-    ((((_.0 _.1 _.2 . _.3) (_.4 _.5 _.6 . _.7))
-      PUBLIC
-      (cast _.8 (output SECRET _.2))
-      PUBLIC)
-     (=/= ((_.2 _.0)) ((_.2 _.1)))
-     (sym _.2))
-    (((_.0 . _.1) (SECRET . _.2))
-     PUBLIC
-     (cast _.3 (assign _.0 (intexp _.4)))
-     PUBLIC)))
+    ((((_.0 _.1 _.2 . _.3) (_.4 _.5 _.6 . _.7)) PUBLIC (cast _.8 (output SECRET _.2)) PUBLIC) (=/= ((_.2 _.0)) ((_.2 _.1))) (sym _.2))
+    ((((_.0 . _.1) (SECRET . _.2)) PUBLIC (cast _.3 (assign _.0 (intexp _.4))) PUBLIC) (sym _.0))))
 
 (test-check "simple-!-o-1"
   (run* (q)
