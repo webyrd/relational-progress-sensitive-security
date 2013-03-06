@@ -100,3 +100,175 @@
       (stop ((_.0 _.2 _.3 _.4 _.5 _.1 . _.6) (_.11 _.7 _.8 _.9 _.10 _.11 . _.12)) _.13))
      (=/= ((_.1 _.2)) ((_.1 _.3)) ((_.1 _.4)) ((_.1 _.5)))
      (sym _.1))))
+
+(test-check "->o-infinite-loop-1"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `(() ()) mem)
+      (== (parse-cmd
+           '(while (< 0 1)
+              skip))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((while (< (intexp ()) (intexp (1))) skip) (() ()) _.0)
+     ((seq skip (while (< (intexp ()) (intexp (1))) skip)) (() ()) _.0))))
+
+;;; diverges, as expected
+#;(test-check "->*o-infinite-loop-1"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `(() ()) mem)
+      (== (parse-cmd
+           '(while (< 0 1)
+              skip))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->*o in out)
+      (== `(,in ,out) q)))
+  'bottom)
+
+(test-check "->o-simple-1"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+           '(assign i MAXINT))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((assign i MAXINT)
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0)
+     (stop
+      ((i i MAXINT secret)
+       ((intval (0 0 0 0 0 1)) (intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0))))
+
+(test-check "->o-simple-2"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+           '(assign i (+ 3 3)))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((assign i (+ (intexp (1 1)) (intexp (1 1))))
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0)
+     (stop
+      ((i i MAXINT secret)
+       ((intval (0 1 1)) (intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0))))
+
+(test-check "eval-expo-simple-3a"
+  (run 1 (q)
+    (fresh (exp mem v)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-exp 'i) exp)
+      (eval-expo exp mem v)
+      (== `(,exp ,mem ,v) q)))
+  '((i
+     ((i MAXINT secret)
+      ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+     (intval (1)))))
+
+(test-check "eval-expo-simple-3b"
+  (run 1 (q)
+    (fresh (exp mem v)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-exp '(+ i 1))
+          exp)
+      (eval-expo exp mem v)
+      (== `(,exp ,mem ,v) q)))
+  '(((+ i (intexp (1)))
+     ((i MAXINT secret)
+      ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+     (intval (0 1)))))
+
+(test-check "->o-simple-3"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+           '(assign i (+ i 1)))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((assign i (+ i (intexp (1))))
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1)))) _.0)
+     (stop
+      ((i i MAXINT secret)
+       ((intval (0 1)) (intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0))))
+
+(test-check "->o-simple-10"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+            '(inc i))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((assign i (+ i (intexp (1))))
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0)
+     (stop
+      ((i i MAXINT secret)
+       ((intval (0 1)) (intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0))))
+
+(test-check "->o-demo-1"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+            '(seq
+               (while (< i MAXINT)
+                 (while (< i secret)
+                   skip))
+               (seq
+                 (output 0)
+                 (inc i))))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->o in out)
+      (== `(,in ,out) q)))
+  '((((seq (while (< i MAXINT) (while (< i secret) skip)) (seq (output PUBLIC (intexp ())) (assign i (+ i (intexp (1))))))
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0)
+     ((seq (seq (while (< i secret) skip) (while (< i MAXINT) (while (< i secret) skip))) (seq (output PUBLIC (intexp ())) (assign i (+ i (intexp (1))))))
+      ((i MAXINT secret)
+       ((intval (1)) (intval (0 0 0 0 0 1)) (intval (0 1 1))))
+      _.0))))
+
+;;; diverges, as expected
+#;(test-check "->*o-demo-1"
+  (run 1 (q)
+    (fresh (in out cmd mem o)
+      (== `((i MAXINT secret) (,(parse-val 1) ,(parse-val 32) ,(parse-val 6))) mem)
+      (== (parse-cmd
+            '(seq
+               (while (< i MAXINT)
+                 (while (< i secret)
+                   skip))
+               (seq
+                 (output 0)
+                 (inc i))))
+          cmd)
+      (== `(,cmd ,mem ,o) in)
+      (->*o in out)
+      (== `(,in ,out) q)))
+  'bottom)

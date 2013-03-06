@@ -16,6 +16,11 @@
 (define DIVERGE 'DIVERGE)
 (define UNKNOWN 'UNKNOWN)
 
+(define parse-val
+  (lambda (val)
+    (pmatch val
+      [,n (guard (number? n)) `(intval ,(build-num n))])))
+
 (define parse-exp
   (lambda (exp)
     (pmatch exp
@@ -207,7 +212,7 @@
         [(fresh (e c m o v n n*)
            (== `((while ,e ,c) ,m ,o) in-state)
            (conde
-             [(== `(intval (,n . ,n*)) v) (== `((seq c (while ,e ,c)) ,m ,o) out-state)]
+             [(== `(intval (,n . ,n*)) v) (== `((seq ,c (while ,e ,c)) ,m ,o) out-state)]
              [(== '(intval ()) v) (== `(stop ,m ,o) out-state)])
            (eval-expo e m v))]
         [(fresh (l e m o v o^)
