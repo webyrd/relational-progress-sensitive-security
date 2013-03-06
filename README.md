@@ -9,11 +9,8 @@ To run the tests, load the file ```pse.scm``` in the ```miniKanren-version``` di
 
 TODO:
 
-* implement parser/unparser
-* double-check output to make sure tests are correct
-* add more test programs
-* implement semantics
 * implement multi-level lattices
+* implement information leakage budget
 
 QUESTIONS/ISSUES:
 

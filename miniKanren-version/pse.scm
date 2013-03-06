@@ -9,13 +9,6 @@
 ;;; Askarov, and Chong, CCS'12.
 ;;; (http://people.seas.harvard.edu/~aslan/ccs12.pdf)
 
-;;; TODO:
-;;; * implement parser/unparser
-;;; * double-check output to make sure tests are correct
-;;; * add more test programs
-;;; * implement semantics
-;;; * implement multi-level lattices
-
 (define PUBLIC 'PUBLIC)
 (define SECRET 'SECRET)
 
